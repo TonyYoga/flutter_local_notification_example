@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notification/core/app/get_routes.dart';
+import 'package:flutter_local_notification/core/model/notification_payload.dart';
 import 'package:flutter_local_notification/pages/test_notification_list.dart';
 import 'package:flutter_local_notification/pages/test_page_1.dart';
 import 'package:flutter_local_notification/pages/test_page_2.dart';
@@ -12,16 +13,13 @@ import 'package:get/get.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
-
   @override
   _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-
   LocalNotificationService _service;
   NotificationAppLaunchDetails ifStartFromNotification;
-
 
   @override
   void initState() {
@@ -31,19 +29,21 @@ class _MyAppState extends State<MyApp> {
   }
 
   _getStartAppDetails() {
-    ifStartFromNotification = _service.notificationAppLounchDetails;
+    ifStartFromNotification = _service.notificationAppLaunchDetails;
 //    print(ifStartFromNotification.didNotificationLaunchApp);
   }
 
-
   @override
   Widget build(BuildContext context) {
-    var initRoute = ifStartFromNotification != null ?
-    ifStartFromNotification.didNotificationLaunchApp ?
-    ifStartFromNotification.payload : '/' : '/';
+    var initRoute = ifStartFromNotification != null
+        ? ifStartFromNotification.didNotificationLaunchApp ? ifStartFromNotification.payload : '/'
+        : '/';
 
     return GetMaterialApp(
-      home: LocalNotification(service: _service, startDetails: ifStartFromNotification,),
+      home: LocalNotification(
+        service: _service,
+        startDetails: ifStartFromNotification,
+      ),
       getPages: pages,
       initialRoute: initRoute,
     );
@@ -58,7 +58,6 @@ class LocalNotification extends StatelessWidget {
 
   const LocalNotification({Key key, this.service, this.startDetails}) : super(key: key);
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,20 +69,22 @@ class LocalNotification extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            startDetails != null ?
-            Text('From notification ${startDetails.didNotificationLaunchApp} '
-                '${startDetails.payload}') : Container(),
+            startDetails != null
+                ? Text('From notification ${startDetails.didNotificationLaunchApp} '
+                    '${startDetails.payload}')
+                : Container(),
             FlatButton(
               color: Colors.blue,
-              onPressed: service.showNotification,
+              onPressed: () => service.showNotification(NotificationPayload(path: TestPage1.path)),
+//              onPressed: () => service.showNotification(NotificationPayload(path: TestPage1.path)),
               child: Text(
-                'Show notification',
+                'Show notification and open ${TestPage1.path}',
                 style: TextStyle(fontSize: 10, color: Colors.white),
               ),
             ),
             FlatButton(
               color: Colors.blue,
-              onPressed: () => service.showNotificationAfterFewSec(TestPage1.path),
+              onPressed: () => service.showNotificationAfterFewSec(NotificationPayload(path: TestPage1.path)),
               child: Text(
                 'Show notification after few seconds, route to page 1',
                 style: TextStyle(fontSize: 10, color: Colors.white),
@@ -91,7 +92,7 @@ class LocalNotification extends StatelessWidget {
             ),
             FlatButton(
               color: Colors.blue,
-              onPressed: () => service.showNotificationAfterFewSec(TestPage2.path),
+              onPressed: () => service.showNotificationAfterFewSec(NotificationPayload(path: TestPage2.path)),
               child: Text(
                 'Show notification after few seconds, route to page 2',
                 style: TextStyle(fontSize: 10, color: Colors.white),
@@ -99,7 +100,7 @@ class LocalNotification extends StatelessWidget {
             ),
             FlatButton(
               color: Colors.blue,
-              onPressed: () => service.notificationPeriod(TestPage1.path),
+              onPressed: () => service.notificationPeriod(NotificationPayload(path: TestPage1.path)),
               child: Text(
                 'Show notification every minute',
                 style: TextStyle(fontSize: 10, color: Colors.white),

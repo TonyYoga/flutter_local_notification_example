@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notification/core/model/notification_payload.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:developer' as dev;
 
@@ -18,7 +20,7 @@ class LocalNotificationService {
   FlutterLocalNotificationsPlugin get notificationPlugin =>
       _flutterLocalNotificationsPlugin;
 
-  NotificationAppLaunchDetails get notificationAppLounchDetails => _details;
+  NotificationAppLaunchDetails get notificationAppLaunchDetails => _details;
 
   LocalNotificationService() {
     _initializing();
@@ -37,19 +39,20 @@ class LocalNotificationService {
   }
 
   Future<void> onSelectNotification(String payload) async {
-    var notificationAppStartDetails = await _flutterLocalNotificationsPlugin
-        .getNotificationAppLaunchDetails();
     dev.log(
-        '{"did start from Notification" : "${notificationAppStartDetails.didNotificationLaunchApp}", '
-        '"payload": "${notificationAppStartDetails.payload}"}');
-
-    if (payload != null) {
-      dev.log('{"payload" : "$payload"}',
-          name: 'onSelectNotification',
-          error: {"data": "Error date or other data"});
+      '{$payload}',
+      name: 'onSelectNotification',
+    );
+    if (payload == null || payload.isEmpty) {
+      dev.log('payload must be not null or empty', name: 'onSelectNotification');
+      return;
     }
-    Get.toNamed(payload, arguments: payload);
-    //Navigator here can be
+    var payloadMap = NotificationPayload.fromJson(json.decode(payload));
+    if(payloadMap.path == null || payloadMap.path.isEmpty) {
+      dev.log('Path is empty or null', name: 'onSelectNotification');
+      return;
+    }
+    Get.toNamed(payloadMap.path, arguments: payloadMap.path);
   }
 
   Future onDidReceiveLocalNotification(
@@ -69,11 +72,11 @@ class LocalNotificationService {
     );
   }
 
-  void showNotification() async {
-    await _notification();
+  void showNotification(NotificationPayload payload) async {
+    await _notification(payload);
   }
 
-  void showNotificationAfterFewSec(String payload) async {
+  void showNotificationAfterFewSec(NotificationPayload payload) async {
     await _notificationAfterFewSec(payload);
   }
 
@@ -91,7 +94,7 @@ class LocalNotificationService {
     await _flutterLocalNotificationsPlugin.cancel(id);
   }
 
-  Future<void> _notification() async {
+  Future<void> _notification(NotificationPayload payload) async {
     IOSNotificationDetails iosNotificationDetails = IOSNotificationDetails();
     AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
@@ -110,11 +113,11 @@ class LocalNotificationService {
       'Hello there',
       'message text',
       notificationDetails,
-      payload: 'payload 12',
+      payload: json.encode(payload.toJson()),
     );
   }
 
-  Future<void> _notificationAfterFewSec(String payload) async {
+  Future<void> _notificationAfterFewSec(NotificationPayload payload) async {
     var timeDelayed = DateTime.now().add(Duration(seconds: 10));
     AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
@@ -130,15 +133,15 @@ class LocalNotificationService {
         NotificationDetails(androidNotificationDetails, iosNotificationDetails);
     await _flutterLocalNotificationsPlugin.schedule(
       new Random().nextInt(10),
-      'Notification $payload',
+      'Notification ${payload.path}',
       'body text',
       timeDelayed,
       notificationDetails,
-      payload: payload,
+      payload: json.encode(payload.toJson()),
     );
   }
 
-  Future<void> notificationPeriod(String payload) async {
+  Future<void> notificationPeriod(NotificationPayload payload) async {
     AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
       'second channel ID',
@@ -152,11 +155,12 @@ class LocalNotificationService {
     NotificationDetails notificationDetails =
         NotificationDetails(androidNotificationDetails, iosNotificationDetails);
     await _flutterLocalNotificationsPlugin.periodicallyShow(
-        new Random().nextInt(10),
-        'Periodically title',
-        'Periodically body',
-        RepeatInterval.EveryMinute,
-        notificationDetails,
-        payload: payload);
+      new Random().nextInt(10),
+      'Periodically title',
+      'Periodically body',
+      RepeatInterval.EveryMinute,
+      notificationDetails,
+      payload: json.encode(payload.toJson()),
+    );
   }
 }
