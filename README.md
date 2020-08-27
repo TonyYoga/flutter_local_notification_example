@@ -6,3 +6,5 @@ Get https://pub.dev/packages/get
 
 Local_notification_flutter https://pub.dev/packages/flutter_local_notifications
 
+Freezed https://pub.dev/packages/freezed
+
